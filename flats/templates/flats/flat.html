@@ -1,0 +1,10 @@
+{% if object_list %}
+    <ul>
+        {% for f in object_list %}
+        <li>{{ f.address}} - {{ f.city.city_name }}</li>
+        {% endfor %}
+    </ul>
+    <a href="add">Add flat</a>
+{% else %}
+    <h3>No flats</h3>
+{% endif %}

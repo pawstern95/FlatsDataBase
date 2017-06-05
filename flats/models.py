@@ -3,10 +3,14 @@ from django.utils import timezone
 import datetime
 from django.db.models import Q
 from django.db import IntegrityError
+from django.core.urlresolvers import reverse
 
 
 class Tenant(models.Model):
     tenant_nickname = models.CharField(max_length=40, unique=True)
+
+    def get_absolute_url(self):
+        return reverse('flats:tenant')
 
     def __str__(self):
         return self.tenant_nickname
@@ -14,18 +18,31 @@ class Tenant(models.Model):
 class City(models.Model):
     city_name = models.CharField(max_length=20, unique=True)
 
+    def get_absolute_url(self):
+        return reverse('flats:city')
+
     def __str__(self):
         return self.city_name
 
+
 class Flat(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
-    flat_id = models.CharField(max_length=10)
+    address = models.CharField(max_length=100)
     rents = models.ManyToManyField(Tenant, through='Rent')
-    rent_beginning = models.DateField('From', default=datetime.date.today)
-    rent_end = models.DateField('To', default=datetime.date.today)
+
+    def get_absolute_url(self):
+        return reverse('flats:flat')
 
     def __str__(self):
-        return self.flat_id
+        return ('%s - %s') % (self.city.city_name, self.address)
+
+class Availability(models.Model):
+    flat = models.ForeignKey(Flat, on_delete=models.CASCADE, default='')
+    day = models.DateField(default=datetime.date.today)
+    availability = models.BooleanField(default=True)
+
+    def __str__(self):
+        return '%s - %s - %s' % (self.flat, self.day, self.availability)
 
 
 class Rent(models.Model):
@@ -34,13 +51,15 @@ class Rent(models.Model):
     rent_beginning = models.DateField('From', default=datetime.date.today)
     rent_end = models.DateField('To', default=datetime.date.today)
 
-    # def __str__(self):
-    #     return '%d - %d' % (self.rent_beginning, self.rent_end)
+    def get_absolute_url(self):
+        return reverse('flats:rent')
 
-    def save(self, *args, **kwargs):
-        if Rent.objects.filter(Q(flat=self.flat), Q(rent_beginning__range=(self.rent_beginning, self.rent_end)))\
-                or Q(rent_end__range=(self.rent_beginning, self.rent_end)) \
-                or Q(rent_beginning__lte=self.rent_beginning, rent_end__gte=self.rent_end):
-            raise IntegrityError("Already occupied!!!")
-        else:
-            super(Rent, self).save()
+    def __str__(self):
+        return '%s - %s - %s - %s - %s' % (self.tenant.tenant_nickname, self.flat.city.city_name, self.flat.address,
+                                           self.rent_beginning, self.rent_end)
+
+
+
+
+
+

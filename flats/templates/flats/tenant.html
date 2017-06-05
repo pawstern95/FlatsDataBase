@@ -1,0 +1,10 @@
+{% if object_list %}
+    <ul>
+        {% for t in object_list %}
+        <li>{{ t.tenant_nickname}}</li>
+        {% endfor %}
+    </ul>
+    <a href="add">Add tenant</a>
+{% else %}
+    <h3>No tenants</h3>
+{% endif %}
